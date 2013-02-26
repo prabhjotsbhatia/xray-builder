@@ -41,7 +41,7 @@ namespace ConsoleApplication1
 
         static void ShowUsage()
         {
-            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
+            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-m path (--mobi2mobi)\tPath must point to mobi2mobi.exe\n\t\t\tIf not specified, searches in the current directory\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
                 "-r (--saveraw)\t\tSave raw book markup to the output directory\n" +
@@ -57,6 +57,7 @@ namespace ConsoleApplication1
         {
             string mobi_unpack = "";
             string mobi2mobi = "";
+            string python = "";
             string shelfariURL = "";
             string outDir = "";
             bool saveRaw = true;
@@ -74,6 +75,8 @@ namespace ConsoleApplication1
                     }
                     else if (args[i] == "-o" || args[i] == "--outdir")
                         outDir = args[++i];
+                    else if (args[i] == "-p" || args[i] == "--python")
+                        python = args[++i];
                     else if (args[i] == "-r" || args[i] == "--saveraw")
                         saveRaw = true;
                     else if (args[i] == "-s" || args[i] == "--shelfari")
@@ -110,7 +113,7 @@ namespace ConsoleApplication1
                 ShowUsage();
 
             Console.WriteLine("Using {0} as an output directory.", outDir);
-
+            //TODO: Make a function to handle these instead of copy/pasting!
             if (mobi2mobi != "" && mobi2mobi != XRayBuilder.Properties.Settings.Default.mobi2mobi)
             {
                 XRayBuilder.Properties.Settings.Default.mobi2mobi = mobi2mobi;
@@ -141,33 +144,62 @@ namespace ConsoleApplication1
             if(!File.Exists(mobi_unpack))
                 Exit("Mobi_unpack not found.");
 
+            if (python != "" && python != XRayBuilder.Properties.Settings.Default.python)
+            {
+                XRayBuilder.Properties.Settings.Default.python = python;
+                XRayBuilder.Properties.Settings.Default.Save();
+                Console.WriteLine("Saving python directory as default. If not specified in the future, this one will be used.");
+            }
+            else if (python == "" && XRayBuilder.Properties.Settings.Default.python != "")
+            {
+                python = XRayBuilder.Properties.Settings.Default.python;
+                Console.WriteLine("Using saved python path ({0}).", python);
+            }
+            else if (python == "")
+            {
+                python = "python";
+                Console.WriteLine("Using default Python command. Ensure Python's directory is included in your PATH environment variable.");
+            }
+
             foreach (string mobiFile in fileList)
             {
                 Console.WriteLine("Processing {0}...", Path.GetFileName(mobiFile));
                 if (shelfariURL == "")
                 {
-                    Console.WriteLine("Enter Shelfari URL for {0}: ", Path.GetFileNameWithoutExtension(mobiFile));
+                    Console.WriteLine("Enter Shelfari URL for {0} (Enter to skip): ", Path.GetFileNameWithoutExtension(mobiFile));
                     shelfariURL = Console.ReadLine().Trim();
-                    if (shelfariURL == "") continue;
+                    if (shelfariURL == "")
+                    {
+                        Console.WriteLine("No Shelfari URL specified! Skipping this book.");
+                        continue;
+                    }
                 }
                 Console.WriteLine("Running mobi_unpack to get book data...");
                 //Create a temp folder and use mobi_unpack from command line to unpack mobi file to that folder
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 string randomFile = GetTempDirectory();
-                startInfo.FileName = "python";
+                startInfo.FileName = python;
                 startInfo.Arguments = mobi_unpack + " -r -d \"" + mobiFile + @""" """ + randomFile + @"""";
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;
                 startInfo.UseShellExecute = false;
                 string unpackInfo = "";
-                using (Process process = Process.Start(startInfo))
+                try
                 {
-                    process.BeginErrorReadLine();
-                    using (StreamReader reader1 = process.StandardOutput)
+                    using (Process process = Process.Start(startInfo))
                     {
-                        unpackInfo = reader1.ReadToEnd();
-                        //Console.WriteLine(unpackInfo);
+                        process.BeginErrorReadLine();
+                        using (StreamReader reader1 = process.StandardOutput)
+                        {
+                            unpackInfo = reader1.ReadToEnd();
+                            //Console.WriteLine(unpackInfo);
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error trying to launch mobi_unpack.py, skipping this book. ({0})", e.Message);
+                    continue;
                 }
                 //Was the unpack successful?
                 if (!unpackInfo.Contains("Write opf\r\nCompleted"))

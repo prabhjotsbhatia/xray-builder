@@ -14,12 +14,15 @@ Requirements:
  I have included the .dll along with the source and binaries. As far as I can tell, this is  allowed. If not, let me know!
 
 Program usage:
-xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
+xraybuilder [-m path] [-o path] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath
 
 -m path (--mobi2mobi)	Path must point to mobi2mobi.exe
 			If not specified, searches in the current directory
 -o path (--outdir)	Path defines the output directory
 			If not specified, uses ./out
+-p path (--python)	Path must point to python.exe
+			If not specified, uses the command "python", which requires the Python
+			directory to be defined in the PATH environment variable.
 -r (--saveraw)		Save raw book markup to the output directory
 -s (--shelfari)		Shelfari URL
 			If not specified, there will be a prompt asking for it

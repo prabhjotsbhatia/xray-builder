@@ -11,3 +11,4 @@ syntax: glob
 *.chapters
 *.db
 obj/*
+*.suo

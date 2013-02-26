@@ -112,7 +112,7 @@ namespace ConsoleApplication1
                         if (useSpoilers)
                         {
                             //Grab book ID from url (search for 5 digits between slashes) and create spoiler cookie
-                            string bookID = Regex.Match(shelfariURL, @"\/\d{5}\/").Value.Substring(1, 5);
+                            string bookID = Regex.Match(shelfariURL, @"\/\d{5}").Value.Substring(1, 5);
                             Cookie spoilers = new Cookie("ShelfariBookWikiSession", "", "/", "www.shelfari.com");
                             spoilers.Value = "{\"SpoilerShowAll\":true%2C\"SpoilerShowCharacters\":true%2C\"SpoilerBookId\":" + bookID + "%2C\"SpoilerShowPSS\":true%2C\"SpoilerShowQuotations\":true%2C\"SpoilerShowParents\":true%2C\"SpoilerShowThemes\":true}";
                             jar.Add(spoilers);
