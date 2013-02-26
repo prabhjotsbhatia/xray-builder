@@ -42,12 +42,13 @@ namespace ConsoleApplication1
         long srl = 0;
         long erl = 0;
         bool shortEx = true;
+        bool useSpoilers = false;
 
         public XRay()
         {
         }
 
-        public XRay(string shelfari, string db, string guid, string asin)
+        public XRay(string shelfari, string db, string guid, string asin, bool useSpoilers)
         {
             if (shelfari == "" || db == "" || guid == "" || asin == "")
                 throw new ArgumentException("Error initializing X-Ray, one of the required parameters was blank.");
@@ -56,6 +57,7 @@ namespace ConsoleApplication1
             this.databaseName = db;
             this.guid = guid;
             this.asin = asin;
+            this.useSpoilers = useSpoilers;
         }
 
         public override string ToString()
@@ -94,7 +96,7 @@ namespace ConsoleApplication1
                 return 1;
             }
 
-            Console.WriteLine("Downloading Shelfari page...");
+            Console.WriteLine("Downloading Shelfari page... {0}", useSpoilers ? "SHOWING SPOILERS!" : "");
             //Download HTML of Shelfari URL, try 3 times just in case it fails the first time
             string shelfariHTML = "";
             int tries = 3;
@@ -102,8 +104,19 @@ namespace ConsoleApplication1
             {
                 try
                 {
-                    using (WebClient client = new WebClient())
+                    //Enable cookies on extended webclient
+                    CookieContainer jar = new CookieContainer();
+                    using (WebClientEx client = new WebClientEx(jar))
                     {
+                        shelfariURL = "http://www.shelfari.com/books/25411/The-Path-of-Daggers";
+                        if (useSpoilers)
+                        {
+                            //Grab book ID from url (search for 5 digits between slashes) and create spoiler cookie
+                            string bookID = Regex.Match(shelfariURL, @"\/\d{5}\/").Value.Substring(1, 5);
+                            Cookie spoilers = new Cookie("ShelfariBookWikiSession", "", "/", "www.shelfari.com");
+                            spoilers.Value = "{\"SpoilerShowAll\":true%2C\"SpoilerShowCharacters\":true%2C\"SpoilerBookId\":" + bookID + "%2C\"SpoilerShowPSS\":true%2C\"SpoilerShowQuotations\":true%2C\"SpoilerShowParents\":true%2C\"SpoilerShowThemes\":true}";
+                            jar.Add(spoilers);
+                        }
                         shelfariHTML = client.DownloadString(shelfariURL);
                         break;
                     }
@@ -523,6 +536,53 @@ namespace ConsoleApplication1
         public static bool ContainsIgnorecase(this string source, string toCheck)
         {
             return source.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+    }
+
+    //Taken from http://stackoverflow.com/questions/1777221/using-cookiecontainer-with-webclient-class
+    //To avoid using HttpWebRequest directly!
+    public class WebClientEx : WebClient
+    {
+        public WebClientEx(CookieContainer container)
+        {
+            this.container = container;
+        }
+
+        private readonly CookieContainer container = new CookieContainer();
+
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            WebRequest r = base.GetWebRequest(address);
+            var request = r as HttpWebRequest;
+            if (request != null)
+            {
+                request.CookieContainer = container;
+            }
+            return r;
+        }
+
+        protected override WebResponse GetWebResponse(WebRequest request, IAsyncResult result)
+        {
+            WebResponse response = base.GetWebResponse(request, result);
+            ReadCookies(response);
+            return response;
+        }
+
+        protected override WebResponse GetWebResponse(WebRequest request)
+        {
+            WebResponse response = base.GetWebResponse(request);
+            ReadCookies(response);
+            return response;
+        }
+
+        private void ReadCookies(WebResponse r)
+        {
+            var response = r as HttpWebResponse;
+            if (response != null)
+            {
+                CookieCollection cookies = response.Cookies;
+                container.Add(cookies);
+            }
         }
     }
 }

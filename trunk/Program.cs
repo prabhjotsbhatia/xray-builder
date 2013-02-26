@@ -41,11 +41,12 @@ namespace ConsoleApplication1
 
         static void ShowUsage()
         {
-            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [-u path] mobiPath\n" +
+            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-m path (--mobi2mobi)\tPath must point to mobi2mobi.exe\n\t\t\tIf not specified, searches in the current directory\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
                 "-r (--saveraw)\t\tSave raw book markup to the output directory\n" +
                 "-s (--shelfari)\t\tShelfari URL\n\t\t\tIf not specified, there will be a prompt asking for it\n" +
+                "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
                 "-u path (--unpack)\tPath must point to mobi_unpack.py\n\t\t\tIf not specified, searches in the current directory\n\n" +
                 "After used once, mobi2mobi and mobi_unpack paths will be saved as default and are not necessary to include every time.\n" +
                 "You can also drag and drop a number of mobi files onto the exe after those paths have been saved.");
@@ -59,6 +60,7 @@ namespace ConsoleApplication1
             string shelfariURL = "";
             string outDir = "";
             bool saveRaw = true;
+            bool spoilers = false;
             List<string> fileList = new List<string>();
 
             if (args.Length > 0)
@@ -76,10 +78,12 @@ namespace ConsoleApplication1
                         saveRaw = true;
                     else if (args[i] == "-s" || args[i] == "--shelfari")
                         shelfariURL = args[++i];
+                    else if (args[i] == "--spoilers")
+                        spoilers = true;
                     else if (args[i] == "-u" || args[i] == "--unpack")
                     {
                         mobi_unpack = args[++i];
-                        if(!File.Exists(mobi_unpack)) Exit("Specified mobi_unpack.py script not found.");
+                        if (!File.Exists(mobi_unpack)) Exit("Specified mobi_unpack.py script not found.");
                     }
                     else if (File.Exists(args[i]))
                         fileList.Add(args[i]);
@@ -213,7 +217,7 @@ namespace ConsoleApplication1
                 Console.WriteLine("Got metadata! Attempting to build X-Ray...");
 
                 //Create X-Ray and attempt to create the base file (essentially the same as the site)
-                XRay ss = new XRay(shelfariURL, database, uniqid, asin);
+                XRay ss = new XRay(shelfariURL, database, uniqid, asin, spoilers);
                 if (ss.createXRAY() > 0)
                 {
                     Console.WriteLine("Error while processing. Skipping to next file.");

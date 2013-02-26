@@ -14,7 +14,7 @@ Requirements:
  I have included the .dll along with the source and binaries. As far as I can tell, this is  allowed. If not, let me know!
 
 Program usage:
-xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [-u path] mobiPath\n" +
+xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
 
 -m path (--mobi2mobi)	Path must point to mobi2mobi.exe
 			If not specified, searches in the current directory
@@ -23,6 +23,8 @@ xraybuilder [-m path] [-o path] [-r] [-s shelfariURL] [-u path] mobiPath\n" +
 -r (--saveraw)		Save raw book markup to the output directory
 -s (--shelfari)		Shelfari URL
 			If not specified, there will be a prompt asking for it
+--spoilers		Use descriptions that contain spoilers
+			Default behaviour is to use spoiler-free descriptions
 -u path (--unpack)	Path must point to mobi_unpack.py
 			If not specified, searches in the current directory
 
