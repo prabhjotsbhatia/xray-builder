@@ -44,6 +44,7 @@ namespace ConsoleApplication1
             Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-m path (--mobi2mobi)\tPath must point to mobi2mobi.exe\n\t\t\tIf not specified, searches in the current directory\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
+                "-p path (--python)	Path must point to python.exe\n\t\t\tIf not specified, uses the command \"python\",\n\t\t\twhich requires the Python directory to be defined in\n\t\t\tthe PATH environment variable.\n" +
                 "-r (--saveraw)\t\tSave raw book markup to the output directory\n" +
                 "-s (--shelfari)\t\tShelfari URL\n\t\t\tIf not specified, there will be a prompt asking for it\n" +
                 "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
