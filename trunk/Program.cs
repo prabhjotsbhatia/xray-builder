@@ -50,7 +50,9 @@ namespace ConsoleApplication1
                 "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
                 "-u path (--unpack)\tPath must point to mobi_unpack.py\n\t\t\tIf not specified, searches in the current directory\n\n" +
                 "After used once, mobi2mobi and mobi_unpack paths will be saved as default and are not necessary to include every time.\n" +
-                "You can also drag and drop a number of mobi files onto the exe after those paths have been saved.");
+                "You can also drag and drop a number of mobi files onto the exe after those paths have been saved.\n\n" +
+                "Books must be DRM-free. If you create an X-Ray file for a book, but still use the DRM copy on your Kindle,\n" +
+                "you will run into issues. The X-Ray has to be used with the DRM-free version it was created from.");
             Exit("", true);
         }
 

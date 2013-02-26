@@ -62,6 +62,7 @@ namespace ConsoleApplication1
 
         public override string ToString()
         {
+            
             //If there are no chapters built (someone only ran createXRAY), just use the default version
             if (chapters.Count > 0)
                 return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""terms"":[{4}],""chapters"":[{5}],""assets"":{{}},""srl"":{6},""erl"":{7}}}",
@@ -108,7 +109,7 @@ namespace ConsoleApplication1
                     CookieContainer jar = new CookieContainer();
                     using (WebClientEx client = new WebClientEx(jar))
                     {
-                        shelfariURL = "http://www.shelfari.com/books/25411/The-Path-of-Daggers";
+                        //shelfariURL = "http://www.shelfari.com/books/25411/The-Path-of-Daggers";
                         if (useSpoilers)
                         {
                             //Grab book ID from url (search for 5 digits between slashes) and create spoiler cookie

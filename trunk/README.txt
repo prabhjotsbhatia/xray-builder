@@ -34,6 +34,8 @@ xraybuilder [-m path] [-o path] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path
 After used once, mobi2mobi and mobi_unpack paths will be saved as default and are not necessary to include every time.
 You can also drag and drop a number of mobi files onto the exe after the mobi2mobi and mobi_unpack paths have been saved.
 
+Books must be DRM-free. If you create an X-Ray file for a book, but still use the DRM copy on your Kindle, you will run into issues. The X-Ray has to be used with the DRM-free version it was created from.
+
 After downloading the terms from Shelfari, they will be exported to a .aliases file in ./ext, named after the book's ASIN. The alias file allows you to define aliases for characters/topics manually to maximize the number of excerpts found within the book.
 Initially I had it so that terms would automatically search by a character's first name as well (Catelyn Stark would also search for Catelyn) but issues arose for things like "General John Smith" so I have left it as a manual feature for now.
 Aliases follow the format:
