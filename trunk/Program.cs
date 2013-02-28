@@ -1,4 +1,4 @@
-﻿/*   Builds an X-Ray file to be used on the Amazon Kindle
+ /*   Builds an X-Ray file to be used on the Amazon Kindle
  *   Original xray builder by shinew, http://www.mobileread.com/forums/showthread.php?t=157770 , http://www.xunwang.me/xray/
  *
  *   Copyright (C) 2013 Ephemerality <Nick Niemi - ephemeral.vilification@gmail.com>
@@ -41,9 +41,10 @@ namespace XRayBuilder
 
         static void ShowUsage()
         {
-            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
+            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-m path (--mobi2mobi)\tPath must point to mobi2mobi.exe\n\t\t\tIf not specified, searches in the current directory\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
+                "--offset N\tSpecifies an offset to be applied to every book location.\n\t\t\tN must be a number (usually negative)\n\t\t\tSee README for more info\n" +
                 "-p path (--python)	Path must point to python.exe\n\t\t\tIf not specified, uses the command \"python\",\n\t\t\twhich requires the Python directory to be defined in\n\t\t\tthe PATH environment variable.\n" +
                 "-r (--saveraw)\t\tSave raw book markup to the output directory\n" +
                 "-s (--shelfari)\t\tShelfari URL\n\t\t\tIf not specified, there will be a prompt asking for it\n" +
@@ -226,6 +227,20 @@ namespace XRayBuilder
                     Console.WriteLine("Saving rawML to output directory.");
                     File.Copy(rawML, Path.Combine(outDir, Path.GetFileName(rawML)), true);
                 }
+                
+                //Attempt to get database name from the mobi file.
+                //If mobi_unpack ran successfully, then hopefully this will always be valid?
+                byte[] dbinput = new byte[32];
+                FileStream stream = File.Open(mobiFile, FileMode.Open, FileAccess.Read);
+                int bytesRead = stream.Read(dbinput, 0, 32);
+                if(bytesRead != 32)
+                {
+                    Console.WriteLine("Error reading from Mobi. Skipping book...");
+                    continue;
+                }
+                string databaseName = Encoding.Default.GetString(bytesRead);
+                
+                
                 //Run mobi2mobi to get db name, uniqid, and asin
                 startInfo.FileName = mobi2mobi;
                 startInfo.Arguments = @"""" + mobiFile + @"""";
@@ -258,9 +273,10 @@ namespace XRayBuilder
                     Exit("Error getting metadata from mobi2mobi. Output: " + mobiInfo);
 
                 Console.WriteLine("Got metadata! Attempting to build X-Ray...");
-
+                Console.WriteLine("Spoilers: {0}", spoilers ? "Enabled" : "Disabled");
+                Console.WriteLine("Location Offset: {0}", offset);
                 //Create X-Ray and attempt to create the base file (essentially the same as the site)
-                XRay ss = new XRay(shelfariURL, database, uniqid, asin, spoilers);
+                XRay ss = new XRay(shelfariURL, database, uniqid, asin, spoilers, offset);
                 if (ss.createXRAY() > 0)
                 {
                     Console.WriteLine("Error while processing. Skipping to next file.");
