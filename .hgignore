@@ -1,0 +1,14 @@
+syntax: glob
+*.mobi
+*.rawml
+*.asc
+*.user
+*.pdb
+*.exe
+*.azw
+*.bak
+*.aliases
+*.chapters
+*.db
+obj/*
+*.suo
