@@ -28,7 +28,7 @@ using System.Net;
 using System.IO;
 using HtmlAgilityPack;
 
-namespace ConsoleApplication1
+namespace XRayBuilder
 {
     class XRay
     {
@@ -43,12 +43,13 @@ namespace ConsoleApplication1
         long erl = 0;
         bool shortEx = true;
         bool useSpoilers = false;
+        int locOffset = 0;
 
         public XRay()
         {
         }
 
-        public XRay(string shelfari, string db, string guid, string asin, bool useSpoilers)
+        public XRay(string shelfari, string db, string guid, string asin, bool useSpoilers = false, int locOffset = 0)
         {
             if (shelfari == "" || db == "" || guid == "" || asin == "")
                 throw new ArgumentException("Error initializing X-Ray, one of the required parameters was blank.");
@@ -58,19 +59,23 @@ namespace ConsoleApplication1
             this.guid = guid;
             this.asin = asin;
             this.useSpoilers = useSpoilers;
+            this.locOffset = locOffset;
         }
 
         public override string ToString()
         {
-            
+            //Insert a version tag of the current program version so you know which version built it.
+            //Will be ignored by the Kindle.
+            Version dd = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string xrayversion = dd.Major.ToString() + "." + dd.Minor.ToString() + dd.Build.ToString();
             //If there are no chapters built (someone only ran createXRAY), just use the default version
             if (chapters.Count > 0)
-                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""terms"":[{4}],""chapters"":[{5}],""assets"":{{}},""srl"":{6},""erl"":{7}}}",
-                    asin, databaseName, guid, version, string.Join<Term>(",", terms), string.Join<Chapter>(",", chapters), srl, erl);
+                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{8}"",""terms"":[{4}],""chapters"":[{5}],""assets"":{{}},""srl"":{6},""erl"":{7}}}",
+                    asin, databaseName, guid, version, string.Join<Term>(",", terms), string.Join<Chapter>(",", chapters), srl, erl, xrayversion);
             else
             {
-                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""terms"":[{4}],""chapters"":[{{""name"":null,""start"":1,""end"":9999999}}]}}",
-                    asin, databaseName, guid, version, string.Join<Term>(",", terms));
+                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{5}"",""terms"":[{4}],""chapters"":[{{""name"":null,""start"":1,""end"":9999999}}]}}",
+                    asin, databaseName, guid, version, string.Join<Term>(",", terms), xrayversion);
             }
         }
 
@@ -275,7 +280,7 @@ namespace ConsoleApplication1
             Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
             string input = Console.ReadLine();
             if (input.ToLower() != "y")
-                throw new Exception("ZXCZCX");
+                return 1;
 
 
             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
@@ -380,12 +385,12 @@ namespace ConsoleApplication1
                             //Only add new locs if shorter excerpt was found
                             if (newLoc >= 0)
                             {
-                                character.locs.Add(String.Format("[{0},{1},{2},{3}]", newLoc, newLenQuote, newLocHighlight, lenHighlight));
+                                character.locs.Add(String.Format("[{0},{1},{2},{3}]", newLoc + locOffset, newLenQuote, newLocHighlight, lenHighlight));
                                 continue;
                             }
                         }
 
-                        character.locs.Add(String.Format("[{0},{1},{2},{3}]", location, lenQuote, locHighlight, lenHighlight));
+                        character.locs.Add(String.Format("[{0},{1},{2},{3}]", location + locOffset, lenQuote, locHighlight, lenHighlight));
 
                         //Console.WriteLine(node.OuterHtml);
                     }
@@ -542,6 +547,7 @@ namespace ConsoleApplication1
 
     //Taken from http://stackoverflow.com/questions/1777221/using-cookiecontainer-with-webclient-class
     //To avoid using HttpWebRequest directly!
+    [System.ComponentModel.DesignerCategory("")]
     public class WebClientEx : WebClient
     {
         public WebClientEx(CookieContainer container)

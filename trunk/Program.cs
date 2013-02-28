@@ -24,7 +24,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
-namespace ConsoleApplication1
+namespace XRayBuilder
 {
     class Program
     {
@@ -63,6 +63,7 @@ namespace ConsoleApplication1
             string python = "";
             string shelfariURL = "";
             string outDir = "";
+            int offset = 0;
             bool saveRaw = true;
             bool spoilers = false;
             List<string> fileList = new List<string>();
@@ -78,6 +79,8 @@ namespace ConsoleApplication1
                     }
                     else if (args[i] == "-o" || args[i] == "--outdir")
                         outDir = args[++i];
+                    else if (args[i] == "--offset")
+                        int.TryParse(args[++i], out offset);
                     else if (args[i] == "-p" || args[i] == "--python")
                         python = args[++i];
                     else if (args[i] == "-r" || args[i] == "--saveraw")
@@ -204,12 +207,17 @@ namespace ConsoleApplication1
                     Console.WriteLine("Error trying to launch mobi_unpack.py, skipping this book. ({0})", e.Message);
                     continue;
                 }
+                string rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
                 //Was the unpack successful?
-                if (!unpackInfo.Contains("Write opf\r\nCompleted"))
+                if (unpackInfo.Contains("Write opf\r\nCompleted"))
+                    rawML = randomFile + @"\mobi7\" + rawML;
+                else if (File.Exists(randomFile + @"\mobi8\" + rawML))
+                    rawML = randomFile + @"\mobi8\" + rawML;
+                else
                     Exit("Error unpacking mobi file: " + unpackInfo);
-                Console.WriteLine("Mobi unpacked. Searching for .rawml...");
+                Console.WriteLine(unpackInfo);
+                Console.WriteLine("Mobi unpacked...");
                 //Attempt to find the .rawml unpacked from the mobi
-                string rawML = randomFile + @"\mobi7\" + Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
                 if (!File.Exists(rawML))
                     Exit("Error finding unpacked rawml file. Path: " + rawML);
                 Console.WriteLine("RawML found at {0}. Running mobi2mobi to grab metadata...", rawML);
