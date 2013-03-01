@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace XRayBuilder
 {
@@ -147,7 +148,8 @@ namespace XRayBuilder
                 mobi_unpack = XRayBuilder.Properties.Settings.Default.mobi_unpack;
                 Console.WriteLine("Using saved mobi_unpack path ({0}).", mobi_unpack);
             }
-            else if (mobi_unpack == "") mobi_unpack = "dist/mobi_unpack.exe";
+            else if (mobi_unpack == "")
+                mobi_unpack = "dist/mobi_unpack.exe";
             if(!File.Exists(mobi_unpack))
                 Exit("Mobi_unpack not found.");
 
@@ -213,7 +215,7 @@ namespace XRayBuilder
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error trying to launch mobi_unpack.py, skipping this book. ({0})", e.Message);
+                    Console.WriteLine("Error trying to launch mobi_unpack, skipping this book. ({0})", e.Message);
                     continue;
                 }
                 string rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
@@ -235,18 +237,32 @@ namespace XRayBuilder
                     Console.WriteLine("Saving rawML to output directory.");
                     File.Copy(rawML, Path.Combine(outDir, Path.GetFileName(rawML)), true);
                 }
-                
+
+                string uniqid = "";
+                string asin = "";
+                Match match = Regex.Match(unpackInfo, @"'ASIN': \['([-|\w]*)']");
+                if (match.Success && match.Groups.Count > 1)
+                    asin = match.Groups[1].Value;
+                match = Regex.Match(unpackInfo, @"'UniqueID': \['(\d*)']");
+                if (match.Success && match.Groups.Count > 1)
+                    uniqid = match.Groups[1].Value;
+                //string test = unpackInfo.Substring(dsf + 
                 //Attempt to get database name from the mobi file.
                 //If mobi_unpack ran successfully, then hopefully this will always be valid?
-                byte[] dbinput = new byte[32];
+                /*byte[] dbinput = new byte[32];
                 FileStream stream = File.Open(mobiFile, FileMode.Open, FileAccess.Read);
+                if (stream == null)
+                {
+                    Console.WriteLine("Error opening mobi file (stream error). Skipping book...");
+                    continue;
+                }
                 int bytesRead = stream.Read(dbinput, 0, 32);
                 if(bytesRead != 32)
                 {
-                    Console.WriteLine("Error reading from Mobi. Skipping book...");
+                    Console.WriteLine("Error reading from mobi file. Skipping book...");
                     continue;
                 }
-                string databaseName = Encoding.Default.GetString(bytesRead);
+                string databaseName = Encoding.Default.GetString(dbinput).Trim('\0');*/
                 
                 
                 //Run mobi2mobi to get db name, uniqid, and asin
@@ -263,8 +279,6 @@ namespace XRayBuilder
                     }
                 }
                 string database = "";
-                string uniqid = "";
-                string asin = "";
                 foreach (string s in mobiInfo)
                 {
                     if (s.Contains("Database Name"))
@@ -277,8 +291,12 @@ namespace XRayBuilder
                         break;
                     }
                 }
+                
                 if (database == "" || uniqid == "" || asin == "")
-                    Exit("Error getting metadata from mobi2mobi. Output: " + mobiInfo);
+                {
+                    Console.WriteLine("Error getting metadata {0} - {1} - {3}. Skipping book...", database, uniqid, asin);
+                    continue;
+                }
 
                 Console.WriteLine("Got metadata! Attempting to build X-Ray...");
                 Console.WriteLine("Spoilers: {0}", spoilers ? "Enabled" : "Disabled");
