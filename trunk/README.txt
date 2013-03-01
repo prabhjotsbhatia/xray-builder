@@ -44,6 +44,8 @@ On my DRM copy, X-Ray is showing: "x jumps over the lazy dog."
 I open the rawML (I use Notepad++), find that excerpt in the book and determine the difference between the original and the DRM version
 In this case the DRM version is 18 characters ahead of the original, so I must specify "--offset -18" on the command line.
 From all the books I have tested with this, the offset was always the same. If for some reason the offset is variable throughout the book, this will obviously fail.
+Note that the offset will also be applied to chapter locs.
+Chapter detection on DRM books is not supported.
 
 After downloading the terms from Shelfari, they will be exported to a .aliases file in ./ext, named after the book's ASIN. The alias file allows you to define aliases for characters/topics manually to maximize the number of excerpts found within the book.
 Initially I had it so that terms would automatically search by a character's first name as well (Catelyn Stark would also search for Catelyn) but issues arose for things like "General John Smith" so I have left it as a manual feature for now.
