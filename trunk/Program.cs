@@ -146,7 +146,7 @@ namespace XRayBuilder
                 mobi_unpack = XRayBuilder.Properties.Settings.Default.mobi_unpack;
                 Console.WriteLine("Using saved mobi_unpack path ({0}).", mobi_unpack);
             }
-            else if (mobi_unpack == "") mobi_unpack = "mobi_unpack.py";
+            else if (mobi_unpack == "") mobi_unpack = "dist/mobi_unpack.exe";
             if(!File.Exists(mobi_unpack))
                 Exit("Mobi_unpack not found.");
 
@@ -184,8 +184,16 @@ namespace XRayBuilder
                 //Create a temp folder and use mobi_unpack from command line to unpack mobi file to that folder
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 string randomFile = GetTempDirectory();
-                startInfo.FileName = python;
-                startInfo.Arguments = mobi_unpack + " -r -d \"" + mobiFile + @""" """ + randomFile + @"""";
+                if (Path.GetExtension(mobi_unpack) == ".py")
+                {
+                    startInfo.FileName = python;
+                    startInfo.Arguments = mobi_unpack + " -r -d \"" + mobiFile + @""" """ + randomFile + @"""";
+                }
+                else
+                {
+                    startInfo.FileName = mobi_unpack;
+                    startInfo.Arguments = "-r -d \"" + mobiFile + @""" """ + randomFile + @"""";
+                }
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;
                 startInfo.UseShellExecute = false;
