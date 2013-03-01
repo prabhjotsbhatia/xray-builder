@@ -1,5 +1,6 @@
 *** X-Ray Builder ****
-* A console application that takes a mobi book file and creates an X-Ray file for that book with * excerpt locations and chapter definitions.
+* A console application that takes a mobi book file and creates an X-Ray file for that book with
+* excerpt locations and chapter definitions.
 *
 * Created by Ephemerality <Nick Niemi - ephemeral.vilification@gmail.com>
 * Original X-Ray script by shinew
@@ -9,20 +10,19 @@
 
 Requirements:
 -mobi2mobi (https://dev.mobileread.com/dist/tompe/mobiperl/)
+ As of version 1.13, mobi2mobi requirement has been removed. Still in testing.
 -mobi_unpack (http://www.mobileread.com/forums/attachment.php?attachmentid=84428&d=1332545649)
+ A version of mobi_unpack, compiled with py2exe (http://www.py2exe.org/) has been included.
 -HtmlAgilityPack (http://htmlagilitypack.codeplex.com/)
  I have included the .dll along with the source and binaries. As far as I can tell, this is  allowed. If not, let me know!
 
 Program usage:
-xraybuilder [-m path] [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath
-
--m path (--mobi2mobi)	Path must point to mobi2mobi.exe
-			If not specified, searches in the current directory
+xraybuilder [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath
 -o path (--outdir)	Path defines the output directory
 			If not specified, uses ./out
---offset NSpecifies an offset to be applied to every book location.
-N must be a number (usually negative)
-See more info below
+--offset N		Specifies an offset to be applied to every book location.
+			N must be a number (usually negative)
+			See more info below
 -p path (--python)	Path must point to python.exe
 			If not specified, uses the command "python", which requires the Python
 			directory to be defined in the PATH environment variable.
