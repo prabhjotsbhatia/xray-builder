@@ -42,8 +42,7 @@ namespace XRayBuilder
 
         static void ShowUsage()
         {
-            Console.WriteLine("Usage: xraybuilder [-m path] [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
-                "-m path (--mobi2mobi)\tPath must point to mobi2mobi.exe\n\t\t\tIf not specified, searches in the current directory\n" +
+            Console.WriteLine("Usage: xraybuilder [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
                 "--offset N\tSpecifies an offset to be applied to every book location.\n\t\t\tN must be a number (usually negative)\n\t\t\tSee README for more info\n" +
                 "-p path (--python)	Path must point to python.exe\n\t\t\tIf not specified, uses the command \"python\",\n\t\t\twhich requires the Python directory to be defined in\n\t\t\tthe PATH environment variable.\n" +
@@ -61,7 +60,6 @@ namespace XRayBuilder
         static void Main(string[] args)
         {
             string mobi_unpack = "";
-            string mobi2mobi = "";
             string python = "";
             string shelfariURL = "";
             string outDir = "";
@@ -76,8 +74,8 @@ namespace XRayBuilder
                 {
                     if (args[i] == "-m" || args[i] == "--mobi2mobi")
                     {
-                        mobi2mobi = args[++i];
-                        if (!File.Exists(mobi2mobi)) Exit("Specified mobi2mobi.exe not found.");
+                        Console.WriteLine("Mobi2mobi is no longer required.");
+                        i++;
                     }
                     else if (args[i] == "-o" || args[i] == "--outdir")
                         outDir = args[++i];
@@ -122,21 +120,6 @@ namespace XRayBuilder
 
             Console.WriteLine("Using {0} as an output directory.", outDir);
             //TODO: Make a function to handle these instead of copy/pasting!
-            if (mobi2mobi != "" && mobi2mobi != XRayBuilder.Properties.Settings.Default.mobi2mobi)
-            {
-                XRayBuilder.Properties.Settings.Default.mobi2mobi = mobi2mobi;
-                XRayBuilder.Properties.Settings.Default.Save();
-                Console.WriteLine("Saving mobi2mobi directory as default. If not specified in the future, this one will be used.");
-            }
-            else if (mobi2mobi == "" && XRayBuilder.Properties.Settings.Default.mobi2mobi != "")
-            {
-                mobi2mobi = XRayBuilder.Properties.Settings.Default.mobi2mobi;
-                Console.WriteLine("Using saved mobi2mobi path ({0}).", mobi2mobi);
-            }
-            else if (mobi2mobi == "") mobi2mobi = "mobi2mobi.exe";
-            if(!File.Exists(mobi2mobi))
-                Exit("Mobi2mobi not found.");
-
             if (mobi_unpack != "" && mobi_unpack != XRayBuilder.Properties.Settings.Default.mobi_unpack)
             {
                 XRayBuilder.Properties.Settings.Default.mobi_unpack = mobi_unpack;
@@ -226,12 +209,12 @@ namespace XRayBuilder
                     rawML = randomFile + @"\mobi8\" + rawML;
                 else
                     Exit("Error unpacking mobi file: " + unpackInfo);
-                Console.WriteLine(unpackInfo);
+                //Console.WriteLine(unpackInfo);
                 Console.WriteLine("Mobi unpacked...");
                 //Attempt to find the .rawml unpacked from the mobi
                 if (!File.Exists(rawML))
                     Exit("Error finding unpacked rawml file. Path: " + rawML);
-                Console.WriteLine("RawML found at {0}. Running mobi2mobi to grab metadata...", rawML);
+                Console.WriteLine("RawML found at {0}. Grabbing metadata...", rawML);
                 if (saveRaw)
                 {
                     Console.WriteLine("Saving rawML to output directory.");
@@ -249,7 +232,7 @@ namespace XRayBuilder
                 //string test = unpackInfo.Substring(dsf + 
                 //Attempt to get database name from the mobi file.
                 //If mobi_unpack ran successfully, then hopefully this will always be valid?
-                /*byte[] dbinput = new byte[32];
+                byte[] dbinput = new byte[32];
                 FileStream stream = File.Open(mobiFile, FileMode.Open, FileAccess.Read);
                 if (stream == null)
                 {
@@ -262,47 +245,19 @@ namespace XRayBuilder
                     Console.WriteLine("Error reading from mobi file. Skipping book...");
                     continue;
                 }
-                string databaseName = Encoding.Default.GetString(dbinput).Trim('\0');*/
+                string databaseName = Encoding.Default.GetString(dbinput).Trim('\0');
                 
-                
-                //Run mobi2mobi to get db name, uniqid, and asin
-                startInfo.FileName = mobi2mobi;
-                startInfo.Arguments = @"""" + mobiFile + @"""";
-                string[] mobiInfo;
-                using (Process process = Process.Start(startInfo))
+                if (databaseName == "" || uniqid == "" || asin == "")
                 {
-                    using (StreamReader reader1 = process.StandardOutput)
-                    {
-                        string temp = reader1.ReadToEnd();
-                        mobiInfo = temp.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-                        //Console.WriteLine(temp);
-                    }
-                }
-                string database = "";
-                foreach (string s in mobiInfo)
-                {
-                    if (s.Contains("Database Name"))
-                        database = s.Substring(15);
-                    else if (s.Contains("MOBIHEADER   uniqid"))
-                        uniqid = s.Substring(21);
-                    else if (s.Contains("EXTH    item: 113 - ASIN - "))
-                    {
-                        asin = s.Substring(32);
-                        break;
-                    }
-                }
-                
-                if (database == "" || uniqid == "" || asin == "")
-                {
-                    Console.WriteLine("Error getting metadata {0} - {1} - {3}. Skipping book...", database, uniqid, asin);
+                    Console.WriteLine("Error getting metadata {0} - {1} - {3}. Skipping book...", databaseName, uniqid, asin);
                     continue;
                 }
 
-                Console.WriteLine("Got metadata! Attempting to build X-Ray...");
+                Console.WriteLine("Got metadata!\nDatabase Name: {0}\nASIN: {1}\nUniqueID: {2}\nAttempting to build X-Ray...", databaseName, asin, uniqid);
                 Console.WriteLine("Spoilers: {0}", spoilers ? "Enabled" : "Disabled");
                 Console.WriteLine("Location Offset: {0}", offset);
                 //Create X-Ray and attempt to create the base file (essentially the same as the site)
-                XRay ss = new XRay(shelfariURL, database, uniqid, asin, spoilers, offset);
+                XRay ss = new XRay(shelfariURL, databaseName, uniqid, asin, spoilers, offset);
                 if (ss.createXRAY() > 0)
                 {
                     Console.WriteLine("Error while processing. Skipping to next file.");
@@ -311,7 +266,11 @@ namespace XRayBuilder
 
                 Console.WriteLine("Initial X-Ray built, adding locs and chapters...");
                 //Expand the X-Ray file from the unpacked mobi
-                ss.expandFromRawML(rawML);
+                if (ss.expandFromRawML(rawML) > 0)
+                {
+                    Console.WriteLine("Skipping to next file.");
+                    continue;
+                }
 
                 using (StreamWriter streamWriter = new StreamWriter(outDir + "\\" + ss.getXRayName(), false, Encoding.Default))
                 {

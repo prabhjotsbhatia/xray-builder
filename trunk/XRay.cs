@@ -68,14 +68,16 @@ namespace XRayBuilder
             //Will be ignored by the Kindle.
             Version dd = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             string xrayversion = dd.Major.ToString() + "." + dd.Minor.ToString() + dd.Build.ToString();
+            //Insert creation date... seems useful?
+            string date = DateTime.Now.ToString("MM/dd/yy HH:mm:ss");
             //If there are no chapters built (someone only ran createXRAY), just use the default version
             if (chapters.Count > 0)
-                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{8}"",""terms"":[{4}],""chapters"":[{5}],""assets"":{{}},""srl"":{6},""erl"":{7}}}",
-                    asin, databaseName, guid, version, string.Join<Term>(",", terms), string.Join<Chapter>(",", chapters), srl, erl, xrayversion);
+                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{8}"",""created"":""{9}"",""terms"":[{4}],""chapters"":[{5}],""assets"":{{}},""srl"":{6},""erl"":{7}}}",
+                    asin, databaseName, guid, version, string.Join<Term>(",", terms), string.Join<Chapter>(",", chapters), srl, erl, xrayversion, date);
             else
             {
-                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{5}"",""terms"":[{4}],""chapters"":[{{""name"":null,""start"":1,""end"":9999999}}]}}",
-                    asin, databaseName, guid, version, string.Join<Term>(",", terms), xrayversion);
+                return String.Format(@"{{""asin"":""{0}"",""guid"":""{1}:{2}"",""version"":""{3}"",""xrayversion"":""{5}"",""created"":""{6}"",""terms"":[{4}],""chapters"":[{{""name"":null,""start"":1,""end"":9999999}}]}}",
+                    asin, databaseName, guid, version, string.Join<Term>(",", terms), xrayversion, date);
             }
         }
 
@@ -276,7 +278,7 @@ namespace XRayBuilder
                 foreach (Chapter c in chapters)
                 {
                     if (c.end > erl) erl = c.end;
-                    Console.WriteLine(c.name);
+                    Console.WriteLine("{0} | start: {1} | end: {2}", c.name, c.start, c.end);
                 }
     
                 Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
