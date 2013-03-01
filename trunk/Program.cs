@@ -50,10 +50,9 @@ namespace XRayBuilder
                 "-s (--shelfari)\t\tShelfari URL\n\t\t\tIf not specified, there will be a prompt asking for it\n" +
                 "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
                 "-u path (--unpack)\tPath must point to mobi_unpack.py\n\t\t\tIf not specified, searches in the current directory\n\n" +
-                "After used once, mobi2mobi and mobi_unpack paths will be saved as default and are not necessary to include every time.\n" +
+                "After used once, mobi_unpack path will be saved as default and is not necessary to include every time.\n" +
                 "You can also drag and drop a number of mobi files onto the exe after those paths have been saved.\n\n" +
-                "Books must be DRM-free. If you create an X-Ray file for a book, but still use the DRM copy on your Kindle,\n" +
-                "you will run into issues. The X-Ray has to be used with the DRM-free version it was created from.");
+                "See README.txt for more information.");
             Exit("", true);
         }
 
@@ -150,7 +149,8 @@ namespace XRayBuilder
             else if (python == "")
             {
                 python = "python";
-                Console.WriteLine("Using default Python command. Ensure Python's directory is included in your PATH environment variable.");
+                if(Path.GetExtension(mobi_unpack) == ".py")
+                    Console.WriteLine("Using default Python command. Ensure Python's directory is included in your PATH environment variable.");
             }
 
             foreach (string mobiFile in fileList)
