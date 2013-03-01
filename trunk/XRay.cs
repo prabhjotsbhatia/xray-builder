@@ -261,27 +261,29 @@ namespace XRayBuilder
             }
 
             //If no chapters were found, add a default chapter that spans the entire book
+            //Define srl and erl so "progress bar" shows up correctly
             if (chapters.Count == 0)
             {
                 long len = (new FileInfo(rawML)).Length;
                 chapters.Add(new Chapter("", 1, len));
+                srl = 1;
+                erl = len;
+            } else {
+                //Run through all chapters and take the highest value, in case some chapters can be defined in individual chapters and parts.
+                //IE. Part 1 includes chapters 1-6, Part 2 includes chapters 7-12.
+                srl = chapters[0].start;
+                Console.WriteLine("Found chapters:");
+                foreach (Chapter c in chapters)
+                {
+                    if (c.end > erl) erl = c.end;
+                    Console.WriteLine(c.name);
+                }
+    
+                Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
+                string input = Console.ReadLine();
+                if (input.ToLower() != "y")
+                    return 1;
             }
-            //Define srl and erl so "progress bar" shows up correctly
-            //Run through all chapters and take the highest value, in case some chapters can be defined in individual chapters and parts.
-            //IE. Part 1 includes chapters 1-6, Part 2 includes chapters 7-12.
-            srl = chapters[0].start;
-            Console.WriteLine("Found chapters:");
-            foreach (Chapter c in chapters)
-            {
-                if (c.end > erl) erl = c.end;
-                Console.WriteLine(c.name);
-            }
-
-            Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
-            string input = Console.ReadLine();
-            if (input.ToLower() != "y")
-                return 1;
-
 
             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
             timer.Start();
