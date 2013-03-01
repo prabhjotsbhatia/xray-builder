@@ -259,7 +259,7 @@ namespace XRayBuilder
                     Console.WriteLine("Chapters exported to {0} for manual editing.", chapterFile);
                 }
                 else
-                    Console.WriteLine("No chapters detected. You can create a file at {0} if you want to define chapters manually.", chapterFile);
+                    Console.WriteLine("No chapters detected.\nYou can create a file at {0} if you want to define chapters manually.", chapterFile);
             }
 
             //If no chapters were found, add a default chapter that spans the entire book
