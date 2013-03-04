@@ -297,6 +297,7 @@ namespace XRayBuilder
                 Console.Write("Scanning book content: {0}          ", ((double)(i + 1) / nodes.Count).ToString("##.0%"));
 
                 HtmlNode node = nodes[i];
+                if (node.FirstChild == null) continue; //If the inner HTML is just empty, skip the paragraph!
                 int lenQuote = node.InnerHtml.Length;
                 int location = node.FirstChild.StreamPosition;
                 if (location < 0)
@@ -334,7 +335,7 @@ namespace XRayBuilder
                             foreach (string s in search)
                             {
                                 string pattern = "(?:<[^>]*>)*"; //Match HTML tags -- provided there's nothing malformed
-                                pattern = string.Format("{0}{1}{0}(?=\\W)", pattern, string.Join(pattern, Regex.Unescape(s).ToCharArray()));
+                                pattern = string.Format("{0}{1}{0}(?=[^a-zA-Z])", pattern, string.Join(pattern, Regex.Unescape(s).ToCharArray()));
                                 Match match = Regex.Match(node.InnerHtml, pattern);
                                 if (match.Success)
                                 {
