@@ -44,15 +44,19 @@ namespace XRayBuilder
         {
             Console.WriteLine("Usage: xraybuilder [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [-u path] mobiPath\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
-                "--offset N\tSpecifies an offset to be applied to every book location.\n\t\t\tN must be a number (usually negative)\n\t\t\tSee README for more info\n" +
+                "--offset N\t\tSpecifies an offset to be applied to every book location\n\t\t\tN must be a number (usually negative)\n\t\t\tSee README for more info\n" +
                 "-p path (--python)	Path must point to python.exe\n\t\t\tIf not specified, uses the command \"python\",\n\t\t\twhich requires the Python directory to be defined in\n\t\t\tthe PATH environment variable.\n" +
                 "-r (--saveraw)\t\tSave raw book markup to the output directory\n" +
                 "-s (--shelfari)\t\tShelfari URL\n\t\t\tIf not specified, there will be a prompt asking for it\n" +
                 "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
                 "-u path (--unpack)\tPath must point to mobi_unpack.py\n\t\t\tIf not specified, searches in the current directory\n\n" +
-                "After used once, mobi_unpack path will be saved as default and is not necessary to include every time.\n" +
-                "You can also drag and drop a number of mobi files onto the exe after those paths have been saved.\n\n" +
-                "See README.txt for more information.");
+                "After used once, mobi_unpack path will be saved as default and is not necessary to include every time.\n\n" +
+                "You can also drag and drop a number of mobi files onto the exe itself.\n\n" +
+                "A packed version of mobi_unpack has been included at ./dist/mobi_unpack.exe.\nIf no saved path exists and not specified, this will be used.\n" +
+                "You can still point to mobi_unpack.py if you have it set up, but python is still required in that case.\n\n" +
+                "If you want to clear your saved settings, they should be stored in:\n" +
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Ephemerality\" +
+                "\n\nSee README.txt for more information.");
             Exit("", true);
         }
 
@@ -252,7 +256,12 @@ namespace XRayBuilder
                     Console.WriteLine("Error getting metadata {0} - {1} - {3}. Skipping book...", databaseName, uniqid, asin);
                     continue;
                 }
-
+                else if (databaseName.Length == 31)
+                {
+                    Console.WriteLine("\nWARNING: Database Name is the maximum length. If \"{0}\" is the full book title, this should not be an issue.\n" +
+                        "If the title is supposed to be longer than that, you may get an error WG on your Kindle.\n" +
+                        "This can be resolved by either shortening the title in Calibre or manually changing the database name.\n", databaseName);
+                }
                 Console.WriteLine("Got metadata!\nDatabase Name: {0}\nASIN: {1}\nUniqueID: {2}\nAttempting to build X-Ray...", databaseName, asin, uniqid);
                 Console.WriteLine("Spoilers: {0}", spoilers ? "Enabled" : "Disabled");
                 Console.WriteLine("Location Offset: {0}", offset);
