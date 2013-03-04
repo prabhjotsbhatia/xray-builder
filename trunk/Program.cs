@@ -98,7 +98,9 @@ namespace XRayBuilder
                         if (!File.Exists(mobi_unpack)) Exit("Specified mobi_unpack.py script not found.");
                     }
                     else if (File.Exists(args[i]))
-                        fileList.Add(args[i]);
+                    {
+                        fileList.Add(Path.GetFullPath(args[i]));
+                    }
                     else if (args[0] == "--usage" || args[0] == "--help" || args[0] == "-?")
                         ShowUsage();
                     else
@@ -202,7 +204,7 @@ namespace XRayBuilder
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error trying to launch mobi_unpack, skipping this book. ({0})", e.Message);
+                    Console.WriteLine("Error trying to launch mobi_unpack, skipping this book. ({0} | {1})", e.Message, e.Data);
                     continue;
                 }
                 string rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
