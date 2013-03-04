@@ -255,7 +255,7 @@ namespace XRayBuilder
                 
                 if (databaseName == "" || uniqid == "" || asin == "")
                 {
-                    Console.WriteLine("Error getting metadata {0} - {1} - {3}. Skipping book...", databaseName, uniqid, asin);
+                    Console.WriteLine("Error: Missing metadata.\nDatabase Name: {0}\nASIN: {1}\nUniqueID: {2}", databaseName, asin, uniqid);
                     continue;
                 }
                 else if (databaseName.Length == 31)

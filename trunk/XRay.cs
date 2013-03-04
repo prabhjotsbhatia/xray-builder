@@ -336,7 +336,11 @@ namespace XRayBuilder
                             {
                                 string pattern = "(?:<[^>]*>)*"; //Match HTML tags -- provided there's nothing malformed
                                 pattern = string.Format("{0}{1}{0}(?=[^a-zA-Z])", pattern, string.Join(pattern, Regex.Unescape(s).ToCharArray()));
-                                Match match = Regex.Match(node.InnerHtml, pattern);
+                                Match match;
+                                if(character.matchCase)
+                                    match = Regex.Match(node.InnerHtml, pattern);
+                                else
+                                    match = Regex.Match(node.InnerHtml, pattern, RegexOptions.IgnoreCase);
                                 if (match.Success)
                                 {
                                     locHighlight = match.Index;
