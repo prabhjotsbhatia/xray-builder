@@ -463,8 +463,11 @@ namespace XRayBuilder
                     return String.Format(@"{{""type"":""{0}"",""term"":""{1}"",""desc"":""{2}"",""descSrc"":""{3}"",""descUrl"":""{4}"",""locs"":[{5}]}}", //,""assets"":[{6}]}}",
                         type, termName, desc, descSrc, descUrl, string.Join(",", locs));
                 else
+                {
+                    Console.WriteLine("WARNING: There are no locs found for {0}. You may have to create aliases for this term to resolve this.\n", termName);
                     return String.Format(@"{{""type"":""{0}"",""term"":""{1}"",""desc"":""{2}"",""descSrc"":""{3}"",""descUrl"":""{4}"",""locs"":[[100,100,100,6]]}}", //,""assets"":[{6}]}}",
                         type, termName, desc, descSrc, descUrl);
+                }
             }
         }
 
