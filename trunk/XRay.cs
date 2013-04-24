@@ -143,8 +143,8 @@ namespace XRayBuilder
             Dictionary<string, string> sections = new Dictionary<string, string>{
                 {"WikiModule_Characters", "character"}, {"WikiModule_Organizations", "topic"}, {"WikiModule_Settings", "topic"},
                 {"WikiModule_Glossary", "topic"} }; //, {"WikiModule_Themes", "topic"} };
-            string[] patterns = { @"""", @"\[\d\]", @"\s*?\(.*\)\s*?" }; //Escape quotes, numbers in brackets, and anything within brackets at all
-            string[] replacements = { @"\""", @"", @"" };
+            string[] patterns = { @"""" }; //, @"\[\d\]", @"\s*?\(.*\)\s*?" }; //Escape quotes, numbers in brackets, and anything within brackets at all
+            string[] replacements = { @"\""" }; //, @"", @"" };
             /************************************/
 
             //Parse elements from various headers listed in sections
@@ -169,6 +169,8 @@ namespace XRayBuilder
                         newTerm.termName = tmpString;
                     }
                     newTerm.termName = newTerm.termName.PregReplace(patterns, replacements);
+                    //if (newTerm.termName.Contains("Sevanna"))
+                    //    tmpString = tmpString;
                     newTerm.desc = newTerm.desc.PregReplace(patterns, replacements);
                     newTerm.descSrc = "shelfari";
                     //Use either the associated shelfari URL of the term or if none exists, use the book's url
