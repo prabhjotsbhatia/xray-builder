@@ -245,15 +245,14 @@ namespace XRayBuilder
 
                     rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
                     //Was the unpack successful?
-                    if (unpackInfo.Contains("Write opf\r\nCompleted"))
-                        rawML = randomFile + @"/mobi7/" + rawML;
-                    else if (File.Exists(randomFile + @"/mobi8/" + rawML))
-                        rawML = randomFile + @"/mobi8/" + rawML;
-                    else
+                    if (!unpackInfo.Contains("Write opf\r\nCompleted"))
                         Exit("Error unpacking mobi file: " + unpackInfo);
                     //Console.WriteLine(unpackInfo);
                     Console.WriteLine("Mobi unpacked...");
                     //Attempt to find the .rawml unpacked from the mobi
+                    rawML = randomFile + @"/mobi8/" + rawML;
+                    if (!File.Exists(rawML))
+                        rawML = randomFile + @"/mobi7/" + rawML;
                     if (!File.Exists(rawML))
                         Exit("Error finding rawml file. Path: " + rawML);
                     Console.WriteLine("RawML found at {0}. Grabbing metadata...", rawML);
