@@ -12,3 +12,5 @@ syntax: glob
 *.db
 obj/*
 *.suo
+trunk/bin/Debug/dist/KindleUnpack_v65
+*.azw3
