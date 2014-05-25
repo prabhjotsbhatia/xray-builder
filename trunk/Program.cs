@@ -42,7 +42,8 @@ namespace XRayBuilder
 
         static void ShowUsage()
         {
-            Console.WriteLine("Usage: xraybuilder [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [--tmp] [-u path] mobiPath\n" +
+            Console.WriteLine("Usage: xraybuilder [-a path] [-o path] [--offset N] [-p] [-r] [-s shelfariURL] [--spoilers] [--tmp] [-u path] [--unattended] mobiPath\n" +
+                "-a path\t\tSpecifies the path to a predefined alias file if you do not want to use the standard one.\n" +
                 "-o path (--outdir)\tPath defines the output directory\n\t\t\tIf not specified, uses ./out\n" +
                 "--offset N\t\tSpecifies an offset to be applied to every book location\n\t\t\tN must be a number (usually negative)\n\t\t\tSee README for more info\n" +
                 "-p path (--python)	Path must point to python.exe\n\t\t\tIf not specified, uses the command \"python\",\n\t\t\twhich requires the Python directory to be defined in\n\t\t\tthe PATH environment variable.\n" +
@@ -51,6 +52,7 @@ namespace XRayBuilder
                 "--spoilers\t\tUse descriptions that contain spoilers\n\t\t\tDefault behaviour is to use spoiler-free descriptions.\n" +
                 "--tmp path\t\tSpecify your own temp directory to extract into\n\t\t\tIf not specified, one will be generated\n" +
                 "-u path (--unpack)\tPath must point to mobi_unpack.py\n\t\t\tIf not specified, searches in the current directory\n\n" +
+                "--unattended\tExecute without any stoppages. If input is required the default option will be chosen.\n" +
                 "After used once, mobi_unpack path will be saved as default and is not necessary to include every time.\n\n" +
                 "You can also drag and drop a number of mobi files onto the exe itself.\n" + 
                 "A rawML can also be passed instead of a mobi file if you prefer, but you will be asked to enter all metadata.\n\n" +
@@ -72,9 +74,11 @@ namespace XRayBuilder
             string databaseName = "";
             string uniqid = "";
             string asin = "";
+            string aliaspath = "";
             int offset = 0;
             bool saveRaw = false;
             bool spoilers = false;
+            bool unattended = false;
             List<string> fileList = new List<string>();
             
             Version dd = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -118,6 +122,14 @@ namespace XRayBuilder
                         mobi_unpack = args[++i];
                         if (!File.Exists(mobi_unpack)) Exit("Specified mobi_unpack.py script not found.");
                     }
+                    else if (args[i] == "-a")
+                    {
+                        aliaspath = args[++i];
+                    }
+                    else if (args[i] == "--unattended")
+                    {
+                        unattended = true;
+                    }
                     else if (File.Exists(args[i]))
                     {
                         fileList.Add(Path.GetFullPath(args[i]));
@@ -159,8 +171,10 @@ namespace XRayBuilder
             }
             else if (mobi_unpack == "")
                 mobi_unpack = "dist/mobi_unpack.exe";
-            if(!File.Exists(mobi_unpack))
-                Exit("Mobi_unpack not found.");
+            if (!File.Exists(mobi_unpack))
+                mobi_unpack = "dist/kindleunpack.exe";
+                if(!File.Exists(mobi_unpack))
+                    Exit("Mobi_unpack not found.");
 
             if (python != "" && python != XRayBuilder.Properties.Settings.Default.python)
             {
@@ -245,7 +259,7 @@ namespace XRayBuilder
 
                     rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
                     //Was the unpack successful?
-                    if (!unpackInfo.Contains("Write opf\r\nCompleted"))
+                    if (!unpackInfo.Contains("Write opf\r\nCompleted") && !unpackInfo.Contains("\r\nCompleted"))
                         Exit("Error unpacking mobi file: " + unpackInfo);
                     //Console.WriteLine(unpackInfo);
                     Console.WriteLine("Mobi unpacked...");
@@ -262,10 +276,14 @@ namespace XRayBuilder
                         File.Copy(rawML, Path.Combine(outDir, Path.GetFileName(rawML)), true);
                     }
 
-                    Match match = Regex.Match(unpackInfo, @"'ASIN': \['([-|\w]*)']");
+                    //Match match = Regex.Match(unpackInfo, @"'ASIN': \['([-|\w]*)']");
+                    //changed for kindleunpack
+                    Match match = Regex.Match(unpackInfo, @"ASIN\s*([-|\w]*)");
                     if (match.Success && match.Groups.Count > 1)
                         asin = match.Groups[1].Value;
-                    match = Regex.Match(unpackInfo, @"'UniqueID': \['(\d*)']");
+                    //match = Regex.Match(unpackInfo, @"'UniqueID': \['(\d*)']");
+                    //changed for kindleunpack
+                    match = Regex.Match(unpackInfo, @"(\d*) unique_id");
                     if (match.Success && match.Groups.Count > 1)
                         uniqid = match.Groups[1].Value;
                     //string test = unpackInfo.Substring(dsf + 
@@ -333,14 +351,14 @@ namespace XRayBuilder
                 Console.WriteLine("Spoilers: {0}", spoilers ? "Enabled" : "Disabled");
                 Console.WriteLine("Location Offset: {0}", offset);
                 //Create X-Ray and attempt to create the base file (essentially the same as the site)
-                XRay ss = new XRay(shelfariURL, databaseName, uniqid, asin, spoilers, offset);
+                XRay ss = new XRay(shelfariURL, databaseName, uniqid, asin, spoilers, offset, aliaspath, unattended);
                 if (ss.createXRAY() > 0)
                 {
                     Console.WriteLine("Error while processing. Skipping to next file.");
                     continue;
                 }
 
-                Console.WriteLine("Initial X-Ray built, adding locs and chapters...");
+                Console.WriteLine("\n\nInitial X-Ray built, adding locs and chapters...");
                 //Expand the X-Ray file from the unpacked mobi
                 if (ss.expandFromRawML(rawML) > 0)
                 {
@@ -357,8 +375,15 @@ namespace XRayBuilder
                 Directory.Delete(randomFile, true);
                 shelfariURL = "";
             }
-            Console.WriteLine("All files processed! Press Enter to exit.");
-            Console.ReadLine();
+            if (!unattended)
+            {
+                Console.WriteLine("All files processed! Press Enter to exit.");
+                Console.ReadLine();
+            }
+            else
+            {
+                Console.WriteLine("All files processed!");
+            }
         }
 
         public static string GetTempDirectory()

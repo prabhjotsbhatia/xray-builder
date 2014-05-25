@@ -37,19 +37,21 @@ namespace XRayBuilder
         string guid = "";
         string asin = "";
         string version = "1";
+        string aliaspath = "";
         List<Term> terms = new List<Term>(100);
         List<Chapter> chapters = new List<Chapter>();
         long srl = 0;
         long erl = 0;
         bool shortEx = true;
         bool useSpoilers = false;
+        bool unattended = false;
         int locOffset = 0;
 
         public XRay()
         {
         }
 
-        public XRay(string shelfari, string db, string guid, string asin, bool useSpoilers = false, int locOffset = 0)
+        public XRay(string shelfari, string db, string guid, string asin, bool useSpoilers = false, int locOffset = 0, string aliaspath = "", bool unattended = false)
         {
             if (shelfari == "" || db == "" || guid == "" || asin == "")
                 throw new ArgumentException("Error initializing X-Ray, one of the required parameters was blank.");
@@ -60,6 +62,8 @@ namespace XRayBuilder
             this.asin = asin;
             this.useSpoilers = useSpoilers;
             this.locOffset = locOffset;
+            this.aliaspath = aliaspath;
+            this.unattended = unattended;
         }
 
         public override string ToString()
@@ -185,25 +189,33 @@ namespace XRayBuilder
             //Could potentially just attempt to automate the creation of aliases, but in some cases it is very subjective...
             //For example, Shelfari shows the character "Artemis Fowl II", but in the book he is either referred to as "Artemis Fowl", "Artemis", or even "Arty"
             //Other characters have one name on Shelfari but can have completely different names within the book
-            string aliasFile = Environment.CurrentDirectory + "\\ext\\" + asin + ".aliases";
+            string aliasFile;
+            if (aliaspath == "")
+                aliasFile = Environment.CurrentDirectory + "\\ext\\" + asin + ".aliases";
+            else
+                aliasFile = aliaspath;
             if (!File.Exists(aliasFile))
             {
-                saveCharacters();
+                saveCharacters(aliasFile);
                 Console.WriteLine("Characters exported to {0} for adding aliases.", aliasFile);
             }
             else
             {
-                loadAliases();
+                loadAliases(aliasFile);
                 Console.WriteLine("Character aliases read from {0}.", aliasFile);
             }
 
             Console.WriteLine("Terms found on Shelfari:");
             foreach (Term t in terms)
                 Console.Write("{0}, ", t.termName);
-            Console.Write("\b\b  \nContinue building using these terms (cancel if you want to add aliases)? (Y/N) ");
-            string input = Console.ReadLine();
-            if (input.ToLower() != "y")
-                return 1;
+
+            if (!unattended)
+            {
+                Console.Write("\b\b  \nContinue building using these terms (cancel if you want to add aliases)? (Y/N) ");
+                string input = Console.ReadLine();
+                if (input.ToLower() != "y")
+                    return 1;
+            }
 
             return 0;
         }
@@ -282,11 +294,14 @@ namespace XRayBuilder
                     if (c.end > erl) erl = c.end;
                     Console.WriteLine("{0} | start: {1} | end: {2}", c.name, c.start, c.end);
                 }
-    
-                Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
-                string input = Console.ReadLine();
-                if (input.ToLower() != "y")
-                    return 1;
+
+                if (!unattended)
+                {
+                    Console.Write("\b\b  \nContinue building using these chapters? (Y/N) ");
+                    string input = Console.ReadLine();
+                    if (input.ToLower() != "y")
+                        return 1;
+                }
             }
 
             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
@@ -295,8 +310,11 @@ namespace XRayBuilder
             HtmlNodeCollection nodes = web.DocumentNode.SelectNodes("//p");
             for (int i = 0; i < nodes.Count; i++)
             {
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write("Scanning book content: {0}          ", ((double)(i + 1) / nodes.Count).ToString("##.0%"));
+                if (!unattended)
+                {
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write("Scanning book content: {0}          ", ((double)(i + 1) / nodes.Count).ToString("##.0%"));
+                }
 
                 HtmlNode node = nodes[i];
                 if (node.FirstChild == null) continue; //If the inner HTML is just empty, skip the paragraph!
@@ -497,20 +515,20 @@ namespace XRayBuilder
             }
         }
 
-        public void saveCharacters()
+        public void saveCharacters(string aliasFile)
         {
             if (!Directory.Exists(Environment.CurrentDirectory + "\\ext\\")) Directory.CreateDirectory(Environment.CurrentDirectory + "\\ext\\");
-            using (StreamWriter streamWriter = new StreamWriter(Environment.CurrentDirectory + "\\ext\\" + asin + ".aliases", false))
+            using (StreamWriter streamWriter = new StreamWriter(aliasFile))
             {
                 foreach (Term c in terms)// if(c.type == "character")
                     streamWriter.WriteLine(c.termName + "|");
             }
         }
 
-        public void loadAliases()
+        public void loadAliases(string aliasFile)
         {
             Dictionary<string, string[]> d = new Dictionary<string, string[]>();
-            using (StreamReader streamReader = new StreamReader(Environment.CurrentDirectory + "\\ext\\" + asin + ".aliases"))
+            using (StreamReader streamReader = new StreamReader(aliasFile))
             {
                 while (!streamReader.EndOfStream)
                 {
