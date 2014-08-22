@@ -1,7 +1,7 @@
  /*   Builds an X-Ray file to be used on the Amazon Kindle
  *   Original xray builder by shinew, http://www.mobileread.com/forums/showthread.php?t=157770 , http://www.xunwang.me/xray/
  *
- *   Copyright (C) 2013 Ephemerality <Nick Niemi - ephemeral.vilification@gmail.com>
+ *   Copyright (C) 2014 Ephemerality <Nick Niemi - ephemeral.vilification@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ namespace XRayBuilder
                 "After used once, mobi_unpack path will be saved as default and is not necessary to include every time.\n\n" +
                 "You can also drag and drop a number of mobi files onto the exe itself.\n" + 
                 "A rawML can also be passed instead of a mobi file if you prefer, but you will be asked to enter all metadata.\n\n" +
-                "A packed version of mobi_unpack has been included at ./dist/mobi_unpack.exe.\nIf no saved path exists and not specified, this will be used.\n" +
+                "A packed version of kindleunpack has been included at ./dist/kindleunpack.exe.\nIf no saved path exists and not specified, this will be used.\n" +
                 "You can still point to mobi_unpack.py if you have it set up, but python is still required in that case.\n\n" +
                 "If you want to clear your saved settings, they should be stored in:\n" +
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Ephemerality\" +
@@ -259,7 +259,7 @@ namespace XRayBuilder
 
                     rawML = Path.GetFileNameWithoutExtension(mobiFile) + ".rawml";
                     //Was the unpack successful?
-                    if (!unpackInfo.Contains("Write opf\r\nCompleted") && !unpackInfo.Contains("\r\nCompleted"))
+                    if (!unpackInfo.Contains("Write opf\r\n") && !unpackInfo.Contains("\r\nCompleted"))
                         Exit("Error unpacking mobi file: " + unpackInfo);
                     //Console.WriteLine(unpackInfo);
                     Console.WriteLine("Mobi unpacked...");
@@ -307,7 +307,7 @@ namespace XRayBuilder
 
                 if (asin == "")
                 {
-                    Console.WriteLine("No ASIN found.\nManually enter ASIN for {0} (Enter to skip): ", Path.GetFileNameWithoutExtension(mobiFile));
+                    Console.WriteLine("No ASIN found.\nManually enter ASIN for {0} (Enter to skip book): ", Path.GetFileNameWithoutExtension(mobiFile));
                     asin = Console.ReadLine().Trim();
                     if (asin == "")
                     {
@@ -317,7 +317,7 @@ namespace XRayBuilder
                 }
                 if (databaseName == "")
                 {
-                    Console.WriteLine("No database name found.\nManually enter for {0} (Enter to skip): ", Path.GetFileNameWithoutExtension(mobiFile));
+                    Console.WriteLine("No database name found.\nManually enter for {0} (Enter to skip book): ", Path.GetFileNameWithoutExtension(mobiFile));
                     databaseName = Console.ReadLine().Trim();
                     if (databaseName == "")
                     {
@@ -327,7 +327,7 @@ namespace XRayBuilder
                 }
                 if (uniqid == "")
                 {
-                    Console.WriteLine("No unique ID found.\nManually enter for {0} (Enter to skip): ", Path.GetFileNameWithoutExtension(mobiFile));
+                    Console.WriteLine("No unique ID found.\nManually enter for {0} (Enter to skip book): ", Path.GetFileNameWithoutExtension(mobiFile));
                     uniqid = Console.ReadLine().Trim();
                     if (uniqid == "")
                     {
