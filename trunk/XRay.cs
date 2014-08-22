@@ -55,7 +55,9 @@ namespace XRayBuilder
         {
             if (shelfari == "" || db == "" || guid == "" || asin == "")
                 throw new ArgumentException("Error initializing X-Ray, one of the required parameters was blank.");
-                
+
+            if (!shelfari.ToLower().StartsWith("http://") && !shelfari.ToLower().StartsWith("https://"))
+                shelfari = "http://" + shelfari;
             this.shelfariURL = shelfari;
             this.databaseName = db;
             this.guid = guid;
@@ -173,8 +175,6 @@ namespace XRayBuilder
                         newTerm.termName = tmpString;
                     }
                     newTerm.termName = newTerm.termName.PregReplace(patterns, replacements);
-                    //if (newTerm.termName.Contains("Sevanna"))
-                    //    tmpString = tmpString;
                     newTerm.desc = newTerm.desc.PregReplace(patterns, replacements);
                     newTerm.descSrc = "shelfari";
                     //Use either the associated shelfari URL of the term or if none exists, use the book's url
@@ -256,8 +256,6 @@ namespace XRayBuilder
                     foreach (HtmlNode chapter in tocnodes)
                     {
                         int filepos = Convert.ToInt32(Regex.Replace(chapter.GetAttributeValue("filepos", "0"), leadingZeros, ""));
-                        if (filepos == 0)
-                            filepos = 0;
                         if (chapters.Count > 0)
                         {
                             chapters[chapters.Count - 1].end = filepos;
@@ -286,7 +284,7 @@ namespace XRayBuilder
                 erl = len;
             } else {
                 //Run through all chapters and take the highest value, in case some chapters can be defined in individual chapters and parts.
-                //IE. Part 1 includes chapters 1-6, Part 2 includes chapters 7-12.
+                //EG. Part 1 includes chapters 1-6, Part 2 includes chapters 7-12.
                 srl = chapters[0].start;
                 Console.WriteLine("Found chapters:");
                 foreach (Chapter c in chapters)
@@ -312,7 +310,13 @@ namespace XRayBuilder
             {
                 if (!unattended)
                 {
-                    Console.SetCursorPosition(0, Console.CursorTop);
+                    try
+                    {
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
                     Console.Write("Scanning book content: {0}          ", ((double)(i + 1) / nodes.Count).ToString("##.0%"));
                 }
 
@@ -322,13 +326,13 @@ namespace XRayBuilder
                 int location = node.FirstChild.StreamPosition;
                 if (location < 0)
                 {
-                    Console.WriteLine("There was a serious error locating the paragraph within the book content.");
+                    Console.WriteLine("There was an error locating the paragraph within the book content.");
                     return 1;
                 }
                 if (location < srl || location > erl) continue; //Skip paragraph if outside chapter range
                 foreach (Term character in terms)
                 {
-                    //Search for character name and aliases in either the html-less text. If failed, try in the HTML for rare situations.
+                    //Search for character name and aliases in the html-less text. If failed, try in the HTML for rare situations.
                     //TODO: Improve location searching, as IndexOf will not work if book length exceeds 2,147,483,647...
                     List<string> search = character.aliases.ToList<string>();
                     search.Insert(0, character.termName);
@@ -379,9 +383,7 @@ namespace XRayBuilder
                          * If an excerpt is too long, the X-Ray reader cuts it off.
                          * If the location of the highlighted word (character name) within the excerpt is far enough in to get cut off,
                          * this section attempts to shorted the excerpt by locating the start of a sentence that is just far enough away from the highlight.
-                         * The length is determined by the space the excerpt takes up rather than its length... so 135 is just a guess based on what I've seen.
-                         * Not fully tested yet
-                         * TODO: Clean up
+                         * The length is determined by the space the excerpt takes up rather than its actual length... so 135 is just a guess based on what I've seen.
                          *****/
                         int lengthLimit = 135;
                         if (shortEx && locHighlight + lenHighlight > lengthLimit)
@@ -394,6 +396,7 @@ namespace XRayBuilder
 
                             while ((start > -1) && (at > -1))
                             {
+                                //TODO: Match more sentence-endings. For whatever reason, couldn't get regex working.
                                 at = node.InnerHtml.LastIndexOf(". ", start); //Any(new char[] { '.', '?', '!' }, start, start);
                                 //at += Regex.Match(node.InnerHtml.Substring(at + 1), "\\S").Index;
                                 if (at > -1)
@@ -478,7 +481,7 @@ namespace XRayBuilder
 
             public override string ToString()
             {
-                //Note that the Amazon X-Ray files declare an "assets" var for each term, but I have not seen one that actually uses them
+                //Note that the Amazon X-Ray files declare an "assets" var for each term, but I have not seen one that actually uses them to contain anything
                 if (locs.Count > 0)
                     return String.Format(@"{{""type"":""{0}"",""term"":""{1}"",""desc"":""{2}"",""descSrc"":""{3}"",""descUrl"":""{4}"",""locs"":[{5}]}}", //,""assets"":[{6}]}}",
                         type, termName, desc, descSrc, descUrl, string.Join(",", locs));
