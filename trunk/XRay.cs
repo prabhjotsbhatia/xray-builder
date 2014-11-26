@@ -236,8 +236,10 @@ namespace XRayBuilder
             string chapterFile = Environment.CurrentDirectory + "\\ext\\" + asin + ".chapters";
             if (File.Exists(chapterFile))
             {
-                loadChapters();
-                Console.WriteLine("Chapters read from {0}.\nDelete this file if you want chapters built automatically.", chapterFile);
+                if (loadChapters())
+                    Console.WriteLine("Chapters read from {0}.\nDelete this file if you want chapters built automatically.", chapterFile);
+                else
+                    Console.WriteLine(String.Format("Failed to read chapters from {0}.\r\nFile is missing or not formatted correctly.", chapterFile));
             }
             else
             {
@@ -504,18 +506,21 @@ namespace XRayBuilder
             }
         }
 
-        public void loadChapters()
+        public bool loadChapters()
         {
             chapters = new List<Chapter>();
+            if (!File.Exists(Environment.CurrentDirectory + "\\ext\\" + asin + ".chapters")) return false;
             using (StreamReader streamReader = new StreamReader(Environment.CurrentDirectory + "\\ext\\" + asin + ".chapters"))
             {
                 while (!streamReader.EndOfStream)
                 {
                     string[] tmp = streamReader.ReadLine().Split('|');
-                    if (tmp[0].Substring(0, 1) == "#") continue;
+                    if (tmp.Length != 3) return false; //Malformed chapters file
+                    else if (tmp[0].Substring(0, 1) == "#") continue;
                     chapters.Add(new Chapter(tmp[0], Convert.ToInt32(tmp[1]), Convert.ToInt64(tmp[2])));
                 }
             }
+            return true;
         }
 
         public void saveCharacters(string aliasFile)
