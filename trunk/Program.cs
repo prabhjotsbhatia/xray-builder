@@ -278,9 +278,9 @@ namespace XRayBuilder
 
                     //Match match = Regex.Match(unpackInfo, @"'ASIN': \['([-|\w]*)']");
                     //changed for kindleunpack
-                    Match match = Regex.Match(unpackInfo, @"ASIN\s*([-|\w]*)");
+                    Match match = Regex.Match(unpackInfo, @"ASIN\s*(.*)");
                     if (match.Success && match.Groups.Count > 1)
-                        asin = match.Groups[1].Value;
+                        asin = match.Groups[1].Value.Replace("\r", "");
                     //match = Regex.Match(unpackInfo, @"'UniqueID': \['(\d*)']");
                     //changed for kindleunpack
                     match = Regex.Match(unpackInfo, @"(\d*) unique_id");
